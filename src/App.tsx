@@ -359,31 +359,31 @@ function Dashboard() {
                   return (
                     <div
                       key={date}
-                      className={`group relative bg-white/[0.03] hover:bg-white/[0.05] border rounded-xl p-3 transition-all card-glow-enter ${
+                      className={`day-card card-glow-enter ${
                         isLastOrderDate
-                          ? 'last-order-border border-rose-500/30'
+                          ? 'day-card-last'
                           : hasOrders
-                            ? 'border-orange-500/30'
-                            : 'border-white/5 hover:border-white/10'
+                            ? 'day-card-active'
+                            : ''
                       }`}
                       style={{ animationDelay: `${idx * 20}ms` }}
                     >
-                      <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-start justify-between mb-2.5">
                         <div>
-                          <p className={`text-xs font-semibold ${isLastOrderDate ? 'last-order-pulse' : hasOrders ? 'text-orange-400' : 'text-gray-300'}`}>
+                          <p className={`text-xs font-bold tracking-wide ${isLastOrderDate ? 'last-order-pulse' : hasOrders ? 'text-orange-400' : 'text-gray-300'}`}>
                             {displayDate}
                           </p>
-                          <p className="text-[10px] text-gray-500 uppercase">{dayName}</p>
+                          <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">{dayName}</p>
                         </div>
                         <div className="text-right">
-                          <p className={`text-lg font-bold ${hasOrders ? 'text-orange-400' : 'text-gray-500'}`}>{data.doors}</p>
-                          <p className="text-[10px] text-gray-500 -mt-0.5">/{DAILY_LIMIT}</p>
+                          <p className={`text-xl font-bold leading-none ${hasOrders ? 'text-orange-400' : 'text-gray-600'}`}>{data.doors}</p>
+                          <p className="text-[10px] text-gray-500 mt-0.5">/{DAILY_LIMIT}</p>
                         </div>
                       </div>
 
-                      <div className="h-1 bg-white/5 rounded-full overflow-hidden mb-2">
+                      <div className="progress-bar mb-2.5">
                         <div
-                          className={`h-full rounded-full transition-all ${
+                          className={`progress-bar-fill ${
                             isLastOrderDate
                               ? 'bg-gradient-to-r from-rose-500 to-pink-500'
                               : hasOrders
@@ -394,22 +394,22 @@ function Dashboard() {
                         />
                       </div>
 
-                      <div className="space-y-1 max-h-24 overflow-y-auto">
+                      <div className="space-y-1.5 max-h-24 overflow-y-auto">
                         {data.orders.length > 0 ? data.orders.map((order) => (
                           <div
                             key={order.id}
-                            className={`flex items-center justify-between gap-1.5 p-1.5 rounded text-xs ${
+                            className={`order-item flex items-center justify-between gap-2 text-xs ${
                               searchQuery && order.order_number.toLowerCase().includes(searchQuery.toLowerCase())
-                                ? 'bg-cyan-500/20 border border-cyan-500/30'
-                                : 'bg-white/[0.02]'
+                                ? 'order-item-highlight'
+                                : ''
                             }`}
                           >
-                            <div className="flex items-center gap-1 min-w-0">
+                            <div className="flex items-center gap-1.5 min-w-0">
                               <FileText className="w-3 h-3 text-gray-500 flex-shrink-0" />
-                              <span className="text-gray-300 truncate">No{order.order_number}</span>
+                              <span className="text-gray-300 truncate font-medium">No{order.order_number}</span>
                             </div>
                             <div className="flex items-center gap-1 flex-shrink-0">
-                              <span className="text-gray-300 font-medium">{order.door_count}</span>
+                              <span className="text-orange-400 font-bold tabular-nums">{order.door_count}</span>
                               {user?.canDelete && (
                                 <button
                                   onClick={(e) => { e.stopPropagation(); setDeleteTarget(order); }}
