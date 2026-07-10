@@ -465,16 +465,26 @@ function OrderModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: ()
         capacities[d] = (capacities[d] || 0) + (o as { door_count: number }).door_count;
       });
 
-      // Bugundan boshlab, yakshanbadan tashqari ish kunlarini topamiz
+      // Bugundan +30 ish kuni (yakshanbadan tashqari) hisoblaymiz
       let targetDate = new Date();
       targetDate.setHours(0, 0, 0, 0);
 
-      // Bugundan keyin birinchi mavjud ish kunini topamiz
-      while (true) {
+      let workingDaysAdded = 0;
+      while (workingDaysAdded < 30) {
         targetDate.setDate(targetDate.getDate() + 1);
-        if (targetDate.getDay() === 0) continue; // Yakshanba o'tkazib yuboriladi
+        if (targetDate.getDay() === 0) continue; // Yakshanba sanalmaydi
+        workingDaysAdded++;
+      }
+
+      // +30 ish kunidan keyin sig'im bo'sh sana topamiz
+      while (true) {
+        if (targetDate.getDay() === 0) {
+          targetDate.setDate(targetDate.getDate() + 1);
+          continue;
+        }
         const dateStr = targetDate.toISOString().split('T')[0];
         if ((capacities[dateStr] || 0) + count <= DAILY_LIMIT) break;
+        targetDate.setDate(targetDate.getDate() + 1);
       }
 
       const { error: insertError } = await supabase.from('orders').insert({
