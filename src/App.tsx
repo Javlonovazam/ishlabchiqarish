@@ -340,8 +340,9 @@ function Dashboard() {
                 {filteredDates.map((date, idx) => {
                   const data = schedule[date] || { doors: 0, orders: [] };
                   const parts = date.split('-');
-                  const displayDate = `${parts[2]}.${parts[1]}`;
-                  const dayName = new Date(date).toLocaleDateString('uz-UZ', { weekday: 'short' });
+                  const displayDate = `${parts[2]}.${parts[1]}.${parts[0]}`;
+                  const uzDays = ['Yakshanba', 'Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba'];
+                  const dayName = uzDays[new Date(date).getDay()];
                   const percent = Math.min((data.doors / DAILY_LIMIT) * 100, 100);
                   const hasOrders = data.doors > 0;
                   const isLastOrderDate = date === lastOrderDate && hasOrders;
