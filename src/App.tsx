@@ -13,6 +13,7 @@ interface User {
   canView: boolean;
   canAdd: boolean;
   canMove: boolean;
+  canDelete: boolean;
   canSettings: boolean;
 }
 
@@ -71,6 +72,7 @@ export default function App() {
         canView: true,
         canAdd: role === 'GENERAL' || role === 'ADMIN',
         canMove: role === 'GENERAL',
+        canDelete: role === 'GENERAL',
         canSettings: role === 'GENERAL',
       });
       return true;
@@ -171,6 +173,13 @@ function Dashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [orderModal, setOrderModal] = useState(false);
   const [moveModal, setMoveModal] = useState<{ open: boolean; order: Order | null }>({ open: false, order: null });
+  const [deleteTarget, setDeleteTarget] = useState<Order | null>(null);
+
+  const handleDeleteOrder = async (order: Order) => {
+    if (!confirm(`No${order.order_number} zayavkasini o'chirilsinmi?`)) return;
+    await supabase.from('orders').delete().eq('id', order.id);
+    fetchOrders();
+  };
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -401,6 +410,14 @@ function Dashboard() {
                             </div>
                             <div className="flex items-center gap-1 flex-shrink-0">
                               <span className="text-gray-300 font-medium">{order.door_count}</span>
+                              {user?.canDelete && (
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setDeleteTarget(order); }}
+                                  className="p-1 hover:bg-rose-500/20 text-rose-400 rounded transition-colors"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
+                              )}
                               {user?.canMove && (
                                 <button
                                   onClick={(e) => { e.stopPropagation(); setMoveModal({ open: true, order }); }}
@@ -433,6 +450,13 @@ function Dashboard() {
       {orderModal && <OrderModal onClose={() => setOrderModal(false)} onSuccess={fetchOrders} />}
       {moveModal.open && moveModal.order && (
         <MoveModal order={moveModal.order} onClose={() => setMoveModal({ open: false, order: null })} onSuccess={fetchOrders} />
+      )}
+      {deleteTarget && (
+        <DeleteConfirmModal
+          order={deleteTarget}
+          onClose={() => setDeleteTarget(null)}
+          onConfirm={() => { handleDeleteOrder(deleteTarget); setDeleteTarget(null); }}
+        />
       )}
     </div>
   );
@@ -637,6 +661,42 @@ function MoveModal({ order, onClose, onSuccess }: { order: Order; onClose: () =>
             )}
           </button>
         </form>
+      </div>
+    </div>
+  );
+}
+
+function DeleteConfirmModal({ order, onClose, onConfirm }: { order: Order; onClose: () => void; onConfirm: () => void }) {
+  return (
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center z-50">
+      <div className="w-full sm:max-w-sm bg-slate-900 border-t sm:border border-white/10 rounded-t-2xl sm:rounded-2xl p-5 animated-slide-up">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-base font-bold text-rose-400">O'chirish</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-white p-1.5 hover:bg-white/10 rounded-lg transition-colors">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <div className="flex items-center gap-3 mb-5 p-3 bg-rose-500/10 border border-rose-500/20 rounded-lg">
+          <AlertCircle className="w-5 h-5 text-rose-400 flex-shrink-0" />
+          <p className="text-xs text-gray-300">
+            No{order.order_number} ({order.door_count} ta) zayavkasini o'chirilsinmi? Bu amalni qaytarib bo'lmaydi.
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={onClose}
+            className="flex-1 py-2.5 bg-white/5 hover:bg-white/10 text-gray-300 text-sm font-medium rounded-lg transition-all"
+          >
+            Bekor qilish
+          </button>
+          <button
+            onClick={onConfirm}
+            className="flex-1 py-2.5 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white text-sm font-semibold rounded-lg transition-all flex items-center justify-center gap-2 shadow-lg shadow-rose-500/20"
+          >
+            <Trash2 className="w-4 h-4" />
+            O'chirish
+          </button>
+        </div>
       </div>
     </div>
   );
