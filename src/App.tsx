@@ -313,7 +313,7 @@ function Dashboard() {
               <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-3">
                 <div>
                   <h1 className="text-lg lg:text-xl font-bold text-white">60 kunlik kalendar</h1>
-                  <p className="text-gray-500 text-xs">Limit: {DAILY_LIMIT} ta | Dam olish kunlari hisobga olinmaydi</p>
+                  <p className="text-gray-500 text-xs">Limit: {DAILY_LIMIT} ta kuniga</p>
                 </div>
 
                 <div className="flex gap-2">
@@ -489,28 +489,23 @@ function OrderModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: ()
         capacities[d] = (capacities[d] || 0) + (o as { door_count: number }).door_count;
       });
 
-      // Bugundan +30 ish kuni (yakshanbadan tashqari) hisoblaymiz
+      // Bugundan +30 kun (yakshanba ham hisobga olinadi)
       const findWorkingStart = (): Date => {
         let d = new Date();
         d.setHours(0, 0, 0, 0);
         let added = 0;
         while (added < 30) {
           d.setDate(d.getDate() + 1);
-          if (d.getDay() === 0) continue;
           added++;
         }
         return d;
       };
 
-      // Berilgan sig'im uchun bo'sh ish kuni topadi
+      // Berilgan sig'im uchun bo'sh sana topadi (yakshanba ham hisobga olinadi)
       const findAvailableDate = (start: Date, need: number): Date => {
         let d = new Date(start);
         d.setHours(0, 0, 0, 0);
         while (true) {
-          if (d.getDay() === 0) {
-            d.setDate(d.getDate() + 1);
-            continue;
-          }
           const dateStr = d.toISOString().split('T')[0];
           if ((capacities[dateStr] || 0) + need <= DAILY_LIMIT) {
             capacities[dateStr] = (capacities[dateStr] || 0) + need;
