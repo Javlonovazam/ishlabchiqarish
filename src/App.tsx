@@ -227,7 +227,7 @@ function Dashboard() {
     : dates;
 
   return (
-    <div className="h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col lg:flex-row overflow-hidden">
+    <div className="h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col lg:flex-row" style={{overflow:'hidden'}}>
       {/* Mobile Header */}
       <div className="lg:hidden flex justify-between items-center px-4 py-3 bg-slate-900/95 backdrop-blur-lg border-b border-white/10 sticky top-0 z-50">
         <div className="flex items-center gap-2.5">
@@ -245,7 +245,7 @@ function Dashboard() {
       {sidebarOpen && <div className="lg:hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-40" onClick={() => setSidebarOpen(false)} />}
 
       {/* Sidebar */}
-      <aside className={`fixed lg:sticky lg:top-0 lg:h-screen left-0 w-[260px] bg-slate-900/95 backdrop-blur-lg border-r border-white/10 p-4 flex flex-col z-50 transform transition-transform lg:transform-none ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+      <aside className={`fixed lg:relative inset-y-0 left-0 w-[260px] flex-shrink-0 bg-[#0f172a] border-r border-white/10 p-4 flex flex-col z-50 transform transition-transform duration-300 lg:transform-none lg:translate-x-0 lg:h-full ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="hidden lg:flex items-center gap-2.5 mb-5 px-1">
           <div className="w-9 h-9 bg-gradient-to-br from-cyan-500 to-teal-600 rounded-lg flex items-center justify-center shadow-lg shadow-cyan-500/20">
             <Factory className="w-5 h-5 text-white" />
@@ -306,7 +306,7 @@ function Dashboard() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-3 sm:p-4 lg:p-5 overflow-y-auto overflow-x-hidden">
+      <main className="flex-1 p-3 sm:p-4 lg:p-5 lg:h-full" style={{overflowY:'auto',overflowX:'hidden'}}>
         {activeTab === 'calendar' && (
           <div className="max-w-7xl mx-auto">
             <div className="flex flex-col gap-3 mb-5">

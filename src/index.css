@@ -100,37 +100,27 @@
   .day-card {
     position: relative;
     background: linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
-    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.08);
     border-radius: 16px;
     padding: 12px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     overflow: hidden;
   }
 
-  .day-card::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: 16px;
-    padding: 1px;
-    background: linear-gradient(145deg, rgba(255,255,255,0.12), rgba(255,255,255,0.02));
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    pointer-events: none;
-  }
-
   .day-card:hover {
     transform: translateY(-2px);
+    border-color: rgba(255,255,255,0.15);
     box-shadow: 0 8px 32px rgba(0,0,0,0.3);
   }
 
-  .day-card-active::before {
-    background: linear-gradient(145deg, rgba(249,115,22,0.4), rgba(249,115,22,0.05));
+  .day-card-active {
+    border-color: rgba(249,115,22,0.35);
+    background: linear-gradient(145deg, rgba(249,115,22,0.06) 0%, rgba(255,255,255,0.01) 100%);
   }
 
-  .day-card-last::before {
-    background: linear-gradient(145deg, rgba(244,63,94,0.4), rgba(244,63,94,0.05));
+  .day-card-last {
+    border-color: rgba(244,63,94,0.35);
+    background: linear-gradient(145deg, rgba(244,63,94,0.06) 0%, rgba(255,255,255,0.01) 100%);
   }
 
   .order-item {
