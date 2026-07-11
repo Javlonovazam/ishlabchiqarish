@@ -1,5 +1,5 @@
 /*
-#  Production System Schema
+# Novza ERP Production System Schema
 
 ## Overview
 Creates the database tables for a door production management ERP system with password-based authentication and role-based access control.
