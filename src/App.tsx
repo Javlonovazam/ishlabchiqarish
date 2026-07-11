@@ -2,7 +2,7 @@ import { useState, useEffect, createContext, useContext } from 'react';
 import { supabase } from './lib/supabase';
 import {
   Lock, Calendar, Plus, Settings, LogOut, Search, X,
-  FileText, Users, Trash2, Save, AlertCircle, CheckCircle, Move, DoorOpen, Factory
+  FileText, Users, Trash2, Save, AlertCircle, CheckCircle, Move, DoorOpen, Factory, Info
 } from 'lucide-react';
 
 type UserRole = 'GENERAL' | 'ADMIN' | 'USER';
@@ -490,40 +490,87 @@ function OrderModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: ()
       });
 
       // Bugundan +30 ish kuni (yakshanbadan tashqari) hisoblaymiz
-      let targetDate = new Date();
-      targetDate.setHours(0, 0, 0, 0);
-
-      let workingDaysAdded = 0;
-      while (workingDaysAdded < 30) {
-        targetDate.setDate(targetDate.getDate() + 1);
-        if (targetDate.getDay() === 0) continue; // Yakshanba sanalmaydi
-        workingDaysAdded++;
-      }
-
-      // +30 ish kunidan keyin sig'im bo'sh sana topamiz
-      while (true) {
-        if (targetDate.getDay() === 0) {
-          targetDate.setDate(targetDate.getDate() + 1);
-          continue;
+      const findWorkingStart = (): Date => {
+        let d = new Date();
+        d.setHours(0, 0, 0, 0);
+        let added = 0;
+        while (added < 30) {
+          d.setDate(d.getDate() + 1);
+          if (d.getDay() === 0) continue;
+          added++;
         }
-        const dateStr = targetDate.toISOString().split('T')[0];
-        if ((capacities[dateStr] || 0) + count <= DAILY_LIMIT) break;
-        targetDate.setDate(targetDate.getDate() + 1);
+        return d;
+      };
+
+      // Berilgan sig'im uchun bo'sh ish kuni topadi
+      const findAvailableDate = (start: Date, need: number): Date => {
+        let d = new Date(start);
+        d.setHours(0, 0, 0, 0);
+        while (true) {
+          if (d.getDay() === 0) {
+            d.setDate(d.getDate() + 1);
+            continue;
+          }
+          const dateStr = d.toISOString().split('T')[0];
+          if ((capacities[dateStr] || 0) + need <= DAILY_LIMIT) {
+            capacities[dateStr] = (capacities[dateStr] || 0) + need;
+            return d;
+          }
+          d.setDate(d.getDate() + 1);
+        }
+      };
+
+      const startDate = findWorkingStart();
+
+      // 45 tadan oshiq (90 gacha) — 2 kunga bo'lamiz
+      if (count > DAILY_LIMIT && count <= DAILY_LIMIT * 2) {
+        const firstDate = findAvailableDate(startDate, DAILY_LIMIT);
+        const secondDate = findAvailableDate(new Date(firstDate.getTime() + 86400000), count - DAILY_LIMIT);
+
+        const { error: err1 } = await supabase.from('orders').insert({
+          order_number: orderNumber.trim(),
+          door_count: DAILY_LIMIT,
+          scheduled_date: firstDate.toISOString().split('T')[0],
+          status: 'planned',
+          operator: user?.login || 'unknown',
+          notes: `${new Date().toLocaleDateString('uz-UZ')} | 1-kun (${count} ta dan)`,
+        });
+        if (err1) throw err1;
+
+        const { error: err2 } = await supabase.from('orders').insert({
+          order_number: orderNumber.trim(),
+          door_count: count - DAILY_LIMIT,
+          scheduled_date: secondDate.toISOString().split('T')[0],
+          status: 'planned',
+          operator: user?.login || 'unknown',
+          notes: `${new Date().toLocaleDateString('uz-UZ')} | 2-kun (${count} ta dan)`,
+        });
+        if (err2) throw err2;
+
+        alert(`No${orderNumber.trim()} — ${count} ta eshik 2 kunga bo'lib joylandi:\n\n1-kun: ${firstDate.toLocaleDateString('uz-UZ')} — ${DAILY_LIMIT} ta\n2-kun: ${secondDate.toLocaleDateString('uz-UZ')} — ${count - DAILY_LIMIT} ta`);
+
+        onSuccess();
+        onClose();
+      } else if (count > DAILY_LIMIT * 2) {
+        setError('Maksimal 90 ta eshik buyurtma qilish mumkin');
+        return;
+      } else {
+        const targetDate = findAvailableDate(startDate, count);
+
+        const { error: insertError } = await supabase.from('orders').insert({
+          order_number: orderNumber.trim(),
+          door_count: count,
+          scheduled_date: targetDate.toISOString().split('T')[0],
+          status: 'planned',
+          operator: user?.login || 'unknown',
+          notes: new Date().toLocaleDateString('uz-UZ'),
+        });
+
+        if (insertError) throw insertError;
+
+        onSuccess();
+        onClose();
       }
-
-      const { error: insertError } = await supabase.from('orders').insert({
-        order_number: orderNumber.trim(),
-        door_count: count,
-        scheduled_date: targetDate.toISOString().split('T')[0],
-        status: 'planned',
-        operator: user?.login || 'unknown',
-        notes: new Date().toLocaleDateString('uz-UZ'),
-      });
-
-      if (insertError) throw insertError;
-
-      onSuccess();
-      onClose();
     } catch {
       setError('Xatolik yuz berdi');
     } finally {
@@ -561,8 +608,21 @@ function OrderModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: ()
               onChange={(e) => setDoorCount(e.target.value)}
               placeholder="Masalan: 12"
               min="1"
+              max="90"
               className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:border-cyan-500"
             />
+            {doorCount && parseInt(doorCount) > DAILY_LIMIT && parseInt(doorCount) <= DAILY_LIMIT * 2 && (
+              <div className="flex items-center gap-2 text-cyan-300 text-xs bg-cyan-500/10 border border-cyan-500/20 rounded-lg p-2.5 mt-2 animated-slide-up">
+                <Info className="w-4 h-4 flex-shrink-0" />
+                <span>{parseInt(doorCount)} ta — 2 kunga bo'lib joylanadi: {DAILY_LIMIT} + {parseInt(doorCount) - DAILY_LIMIT} ta</span>
+              </div>
+            )}
+            {doorCount && parseInt(doorCount) > DAILY_LIMIT * 2 && (
+              <div className="flex items-center gap-2 text-rose-400 text-xs bg-rose-500/10 border border-rose-500/20 rounded-lg p-2.5 mt-2 animated-slide-up">
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                <span>Maksimal 90 ta eshik mumkin</span>
+              </div>
+            )}
           </div>
 
           {error && (
